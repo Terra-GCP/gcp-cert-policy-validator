@@ -1,0 +1,52 @@
+# GCP Certificate Policy Validator — Azure DevOps entry pipeline
+name: gcp-cert-policy-validate-$(Date:yyyyMMdd)$(Rev:.r)
+trigger: none
+
+parameters:
+  - name: workloadApp
+    type: string
+    default: sample-app
+  - name: workloadEnv
+    type: string
+    default: dev
+    values:
+      - dev
+      - sandbox
+      - prod
+  - name: commonName
+    type: string
+    default: 'api-dev.example.internal'
+  - name: organizationalUnit
+    displayName: Must be env-app (e.g. dev-sample-app)
+    type: string
+    default: 'dev-sample-app'
+  - name: validityDays
+    type: number
+    default: 400
+
+variables:
+  allowedApps: 'sample-app,sample-service'
+  minValidityDays: 365
+  maxValidityDays: 730
+  maxValidityDaysProd: 548
+  maintWindowStartMonth: 11
+  maintWindowEndMonth: 1
+  maintWindowEndDay: 7
+  strictValidityEnvs: 'prod'
+
+stages:
+  - template: templates/cert-validate-template.yaml
+    parameters:
+      workloadApp: ${{ parameters.workloadApp }}
+      workloadEnv: ${{ parameters.workloadEnv }}
+      commonName: ${{ parameters.commonName }}
+      organizationalUnit: ${{ parameters.organizationalUnit }}
+      validityDays: ${{ parameters.validityDays }}
+      allowedApps: $(allowedApps)
+      minValidityDays: $(minValidityDays)
+      maxValidityDays: $(maxValidityDays)
+      maxValidityDaysProd: $(maxValidityDaysProd)
+      maintWindowStartMonth: $(maintWindowStartMonth)
+      maintWindowEndMonth: $(maintWindowEndMonth)
+      maintWindowEndDay: $(maintWindowEndDay)
+      strictValidityEnvs: $(strictValidityEnvs)

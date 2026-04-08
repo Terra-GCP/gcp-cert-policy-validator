@@ -1,0 +1,70 @@
+# GCP Certificate Policy Validator — manual run (no GCP credentials).
+name: Certificate policy validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      workload_app:
+        type: string
+        default: sample-app
+      workload_env:
+        type: choice
+        options:
+          - dev
+          - sandbox
+          - prod
+        default: dev
+      common_name:
+        type: string
+        default: api-dev.example.internal
+      organizational_unit:
+        type: string
+        default: dev-sample-app
+      validity_days:
+        type: string
+        default: "400"
+      allowed_apps:
+        type: string
+        default: sample-app,sample-service
+      min_validity_days:
+        type: string
+        default: "365"
+      max_validity_days:
+        type: string
+        default: "730"
+      max_validity_days_prod:
+        type: string
+        default: "548"
+      strict_validity_envs:
+        type: string
+        default: prod
+      maint_window_start_month:
+        type: string
+        default: "11"
+      maint_window_end_month:
+        type: string
+        default: "1"
+      maint_window_end_day:
+        type: string
+        default: "7"
+
+permissions:
+  contents: read
+
+jobs:
+  call-validate:
+    uses: ./.github/workflows/cert-validate-reusable.yaml
+    with:
+      workload_app: ${{ inputs.workload_app }}
+      workload_env: ${{ inputs.workload_env }}
+      common_name: ${{ inputs.common_name }}
+      organizational_unit: ${{ inputs.organizational_unit }}
+      validity_days: ${{ inputs.validity_days }}
+      allowed_apps: ${{ inputs.allowed_apps }}
+      min_validity_days: ${{ inputs.min_validity_days }}
+      max_validity_days: ${{ inputs.max_validity_days }}
+      max_validity_days_prod: ${{ inputs.max_validity_days_prod }}
+      strict_validity_envs: ${{ inputs.strict_validity_envs }}
+      maint_window_start_month: ${{ inputs.maint_window_start_month }}
+      maint_window_end_month: ${{ inputs.maint_window_end_month }}
+      maint_window_end_day: ${{ inputs.maint_window_end_day }}

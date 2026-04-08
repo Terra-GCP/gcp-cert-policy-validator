@@ -1,0 +1,73 @@
+# GCP Certificate Policy Validator — reusable validation only (no secrets).
+name: Certificate policy validation (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      workload_app:
+        type: string
+        required: true
+      workload_env:
+        type: string
+        required: true
+      common_name:
+        type: string
+        required: true
+      organizational_unit:
+        type: string
+        required: true
+      validity_days:
+        type: string
+        required: true
+      allowed_apps:
+        type: string
+        required: true
+      min_validity_days:
+        type: string
+        required: true
+      max_validity_days:
+        type: string
+        required: true
+      max_validity_days_prod:
+        type: string
+        required: true
+      strict_validity_envs:
+        type: string
+        required: true
+      maint_window_start_month:
+        type: string
+        required: true
+      maint_window_end_month:
+        type: string
+        required: true
+      maint_window_end_day:
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Pre-issuance policy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - env:
+          WORKLOAD_APP: ${{ inputs.workload_app }}
+          WORKLOAD_ENV: ${{ inputs.workload_env }}
+          COMMON_NAME: ${{ inputs.common_name }}
+          ORGANIZATIONAL_UNIT: ${{ inputs.organizational_unit }}
+          VALIDITY_DAYS: ${{ inputs.validity_days }}
+          ALLOWED_APPS: ${{ inputs.allowed_apps }}
+          MIN_VALIDITY_DAYS: ${{ inputs.min_validity_days }}
+          MAX_VALIDITY_DAYS: ${{ inputs.max_validity_days }}
+          MAX_VALIDITY_DAYS_PROD: ${{ inputs.max_validity_days_prod }}
+          STRICT_VALIDITY_ENVS: ${{ inputs.strict_validity_envs }}
+          MAINT_WINDOW_START_MONTH: ${{ inputs.maint_window_start_month }}
+          MAINT_WINDOW_END_MONTH: ${{ inputs.maint_window_end_month }}
+          MAINT_WINDOW_END_DAY: ${{ inputs.maint_window_end_day }}
+        run: |
+          set -euo pipefail
+          chmod +x scripts/validate-cert-request.sh
+          scripts/validate-cert-request.sh

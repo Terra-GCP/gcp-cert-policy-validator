@@ -1,0 +1,43 @@
+# GCP Certificate Policy Validator — Cloud Build (GNU date via Debian-based image).
+timeout: 600s
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+substitutions:
+  _WORKLOAD_APP: sample-app
+  _WORKLOAD_ENV: dev
+  _COMMON_NAME: api-dev.example.internal
+  _ORGANIZATIONAL_UNIT: dev-sample-app
+  _VALIDITY_DAYS: "400"
+  _ALLOWED_APPS: sample-app,sample-service
+  _MIN_VALIDITY_DAYS: "365"
+  _MAX_VALIDITY_DAYS: "730"
+  _MAX_VALIDITY_DAYS_PROD: "548"
+  _STRICT_VALIDITY_ENVS: prod
+  _MAINT_WINDOW_START_MONTH: "11"
+  _MAINT_WINDOW_END_MONTH: "1"
+  _MAINT_WINDOW_END_DAY: "7"
+
+steps:
+  - id: validate
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: bash
+    env:
+      - "WORKLOAD_APP=${_WORKLOAD_APP}"
+      - "WORKLOAD_ENV=${_WORKLOAD_ENV}"
+      - "COMMON_NAME=${_COMMON_NAME}"
+      - "ORGANIZATIONAL_UNIT=${_ORGANIZATIONAL_UNIT}"
+      - "VALIDITY_DAYS=${_VALIDITY_DAYS}"
+      - "ALLOWED_APPS=${_ALLOWED_APPS}"
+      - "MIN_VALIDITY_DAYS=${_MIN_VALIDITY_DAYS}"
+      - "MAX_VALIDITY_DAYS=${_MAX_VALIDITY_DAYS}"
+      - "MAX_VALIDITY_DAYS_PROD=${_MAX_VALIDITY_DAYS_PROD}"
+      - "STRICT_VALIDITY_ENVS=${_STRICT_VALIDITY_ENVS}"
+      - "MAINT_WINDOW_START_MONTH=${_MAINT_WINDOW_START_MONTH}"
+      - "MAINT_WINDOW_END_MONTH=${_MAINT_WINDOW_END_MONTH}"
+      - "MAINT_WINDOW_END_DAY=${_MAINT_WINDOW_END_DAY}"
+    args:
+      - -ceu
+      - |
+        chmod +x scripts/validate-cert-request.sh
+        ./scripts/validate-cert-request.sh

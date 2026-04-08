@@ -1,0 +1,45 @@
+# GCP Certificate Policy Validator — validate-cert-request.sh only (no GCP).
+parameters:
+  workloadApp: ''
+  workloadEnv: ''
+  commonName: ''
+  organizationalUnit: ''
+  validityDays: 400
+  allowedApps: 'sample-app,sample-service'
+  minValidityDays: 365
+  maxValidityDays: 730
+  maxValidityDaysProd: 548
+  maintWindowStartMonth: 11
+  maintWindowEndMonth: 1
+  maintWindowEndDay: 7
+  strictValidityEnvs: 'prod'
+
+stages:
+  - stage: Validate
+    displayName: Pre-issuance policy
+    jobs:
+      - job: policy
+        displayName: validate-cert-request.sh
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - checkout: self
+          - bash: |
+              set -euo pipefail
+              ROOT="$(Build.SourcesDirectory)"
+              chmod +x "${ROOT}/scripts/validate-cert-request.sh"
+              export WORKLOAD_APP="${{ parameters.workloadApp }}"
+              export WORKLOAD_ENV="${{ parameters.workloadEnv }}"
+              export COMMON_NAME="${{ parameters.commonName }}"
+              export ORGANIZATIONAL_UNIT="${{ parameters.organizationalUnit }}"
+              export VALIDITY_DAYS="${{ parameters.validityDays }}"
+              export ALLOWED_APPS="${{ parameters.allowedApps }}"
+              export MIN_VALIDITY_DAYS="${{ parameters.minValidityDays }}"
+              export MAX_VALIDITY_DAYS="${{ parameters.maxValidityDays }}"
+              export MAX_VALIDITY_DAYS_PROD="${{ parameters.maxValidityDaysProd }}"
+              export MAINT_WINDOW_START_MONTH="${{ parameters.maintWindowStartMonth }}"
+              export MAINT_WINDOW_END_MONTH="${{ parameters.maintWindowEndMonth }}"
+              export MAINT_WINDOW_END_DAY="${{ parameters.maintWindowEndDay }}"
+              export STRICT_VALIDITY_ENVS="${{ parameters.strictValidityEnvs }}"
+              "${ROOT}/scripts/validate-cert-request.sh"
+            displayName: Run validation
