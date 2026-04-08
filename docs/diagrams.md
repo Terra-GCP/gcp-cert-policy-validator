@@ -1,5 +1,7 @@
 # Diagram gallery — GCP Certificate Policy Validator
 
+The **main README** includes a single **end-to-end automation** diagram (Option **A** + Option **B**). The sections below zoom in on specific views.
+
 ---
 
 ## 1. Scope (validation only)

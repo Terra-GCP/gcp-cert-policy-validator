@@ -15,6 +15,64 @@ Use **A** for **PR gates** and rule design; use **B** for **event-driven** CSR h
 
 ---
 
+### End-to-end automation (both deployment styles)
+
+Same **policy goals**; pick **Option A**, **Option B**, or **both** (keep rule logic aligned). Option A never calls Google APIs from the validation step; Option B runs inside GCP with a **service identity** and optional **CAS**. Details: [`docs/pipeline.md`](docs/pipeline.md) (CI), [`docs/serverless-option.md`](docs/serverless-option.md) (Functions).
+
+```mermaid
+flowchart TB
+  classDef bash fill:#E6F4EA,stroke:#0D652D,stroke-width:2px
+  classDef gcp fill:#E8F0FE,stroke:#1967D2,stroke-width:2px
+  classDef gate fill:#FEF7E0,stroke:#E37400,stroke-width:2px
+  classDef fail fill:#FCE8E6,stroke:#C5221F,stroke-width:2px
+  classDef meta fill:#F1F3F4,stroke:#5F6368,stroke-width:1px
+
+  HUB["Policy layer — pre-issuance checks before trusting a request"]
+
+  subgraph optA["① Option A — Bash + multi-CI"]
+    direction TB
+    Atr["Trigger · workflow_dispatch · PR · reusable workflow_call"]
+    Arun["Runner · GitHub Actions · Azure DevOps · Cloud Build"]
+    Aenv["Map inputs / substitutions to env vars"]
+    Aval["validate-cert-request.sh — allowlist · OU · CN · lifetime · blackout"]
+    Ad{Pass?}
+    Aok(["Green — unblock merge or publish params"])
+    Abad(["Red — fail pipeline / block merge"])
+    Atr --> Arun --> Aenv --> Aval --> Ad
+    Ad -->|yes| Aok
+    Ad -->|no| Abad
+  end
+
+  subgraph optB["② Option B — Cloud Functions + CSR (optional CAS)"]
+    direction TB
+    Btr["Trigger · GCS object · HTTP · Eventarc"]
+    Bid["Function service identity · IAM to bucket + Private CA (if issuing)"]
+    Bval["validator.py · main.py — parse CSR + policy"]
+    Bd{Pass?}
+    Bcas["Optional · CAS sign or API validation-only mode"]
+    Bout["Write PEM / JSON status · bucket or response"]
+    Bbad(["Reject · error artifact / structured failure"])
+    Btr --> Bid --> Bval --> Bd
+    Bd -->|yes| Bcas --> Bout
+    Bd -->|no| Bbad
+  end
+
+  HUB --> Atr
+  HUB --> Btr
+
+  SYNC["If both are used: keep bash + Python rule logic aligned under your change process"]
+  Aok -.-> SYNC
+  Bout -.-> SYNC
+
+  class Atr,Arun,Aenv,Aval bash
+  class Btr,Bid,Bcas,Bout gcp
+  class Aval,Ad,Bval,Bd gate
+  class Abad,Bbad fail
+  class HUB,SYNC meta
+```
+
+---
+
 ## Setup and use (Option A — start here)
 
 **Step-by-step:** **[docs/setup-and-use.md](docs/setup-and-use.md)** — local shell, GitHub Actions, Azure DevOps, and Cloud Build.
@@ -71,7 +129,7 @@ Use **Linux** or **WSL** for GNU `date -d`. Native macOS `date` may fail the mai
 |----------|-----------|
 | **[docs/setup-and-use.md](docs/setup-and-use.md)** | **Option A:** install, local run, GitHub, ADO, Cloud Build. |
 | **[docs/serverless-option.md](docs/serverless-option.md)** | **Option B:** Cloud Functions path vs bash; no Terraform here. |
-| [docs/diagrams.md](docs/diagrams.md) | **Diagram gallery**. |
+| [docs/diagrams.md](docs/diagrams.md) | **Diagram gallery** (README also has **end-to-end automation** above). |
 | [docs/architecture.md](docs/architecture.md) | Positioning and validation context. |
 | [docs/validation-deep-dive.md](docs/validation-deep-dive.md) | **Rule matrix** and decision flow. |
 | [docs/pipeline.md](docs/pipeline.md) | ADO / GitHub / Cloud Build (Option A). |
